@@ -423,6 +423,25 @@ public sealed class MainForm : Form
         }
     }
 
+    private async Task TryDeleteAsync()
+    {
+        if (string.IsNullOrEmpty(_apiPushUrl)) return;
+
+        try
+        {
+            await _apiClient.DeleteAsync(_apiPushUrl);
+        }
+        catch
+        {
+        }
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        _ = TryDeleteAsync();
+        base.OnFormClosing(e);
+    }
+
     private static string PersonaStateText(int state) => state switch
     {
         0 => "Offline",
