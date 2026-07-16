@@ -3,8 +3,8 @@
 ## Build & publish
 
 ```powershell
-dotnet build
-dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o dist
+dotnet build src
+dotnet publish src -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o dist
 ```
 
 Output: `dist/StatusNeko.exe` (framework-dependent, needs .NET 10 runtime).
