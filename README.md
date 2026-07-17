@@ -12,7 +12,7 @@
 ## 构建
 
 ```powershell
-dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o dist
+dotnet publish src -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o dist
 ```
 
 输出在 `dist/StatusNeko.exe`，单文件，需要 [.NET 10 运行时](https://dotnet.microsoft.com/download/dotnet/10.0)。
