@@ -27,7 +27,7 @@ public sealed class MainForm : Form
     public MainForm()
     {
         Text = "Status Neko";
-        ClientSize = new Size(400, 280);
+        ClientSize = new Size(450, 280);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -64,12 +64,21 @@ public sealed class MainForm : Form
         };
         settingsBtn.Click += (_, _) => OpenSettings();
 
+        var deleteBtn = new Button
+        {
+            Text = "删除",
+            Font = new Font("Segoe UI", 9),
+            Location = new Point(380, 6),
+            Size = new Size(50, 24)
+        };
+        deleteBtn.Click += (_, _) => _ = TryDeleteAsync();
+
         // ── Section 1: SMTC ──
 
         var sec1 = new Label
         {
             Location = new Point(16, 34),
-            Size = new Size(368, 18),
+            Size = new Size(418, 18),
             Font = new Font("Segoe UI", 10, FontStyle.Bold),
             ForeColor = Color.FromArgb(51, 51, 51),
             Text = "SMTC 信息"
@@ -78,7 +87,7 @@ public sealed class MainForm : Form
         _sourceLabel = new Label
         {
             Location = new Point(16, 54),
-            Size = new Size(368, 16),
+            Size = new Size(418, 16),
             Font = new Font("Segoe UI", 9),
             ForeColor = Color.Gray,
             Text = ""
@@ -87,7 +96,7 @@ public sealed class MainForm : Form
         _titleLabel = new Label
         {
             Location = new Point(16, 72),
-            Size = new Size(368, 24),
+            Size = new Size(418, 24),
             Font = new Font("Segoe UI", 14, FontStyle.Bold),
             Text = "(no media)"
         };
@@ -95,7 +104,7 @@ public sealed class MainForm : Form
         _artistLabel = new Label
         {
             Location = new Point(16, 96),
-            Size = new Size(368, 20),
+            Size = new Size(418, 20),
             Font = new Font("Segoe UI", 11),
             ForeColor = Color.FromArgb(68, 68, 68),
             Text = ""
@@ -104,7 +113,7 @@ public sealed class MainForm : Form
         var sep1 = new Label
         {
             Location = new Point(16, 120),
-            Size = new Size(368, 1),
+            Size = new Size(418, 1),
             BackColor = Color.FromArgb(221, 221, 221),
             BorderStyle = BorderStyle.None
         };
@@ -114,7 +123,7 @@ public sealed class MainForm : Form
         var sec2 = new Label
         {
             Location = new Point(16, 126),
-            Size = new Size(368, 18),
+            Size = new Size(418, 18),
             Font = new Font("Segoe UI", 10, FontStyle.Bold),
             ForeColor = Color.FromArgb(51, 51, 51),
             Text = "Steam 状态"
@@ -123,7 +132,7 @@ public sealed class MainForm : Form
         _personaLabel = new Label
         {
             Location = new Point(16, 146),
-            Size = new Size(368, 18),
+            Size = new Size(418, 18),
             Font = new Font("Segoe UI", 9),
             ForeColor = Color.Gray,
             Text = "Steam: not configured"
@@ -140,7 +149,7 @@ public sealed class MainForm : Form
         var sep2 = new Label
         {
             Location = new Point(16, 192),
-            Size = new Size(368, 1),
+            Size = new Size(418, 1),
             BackColor = Color.FromArgb(221, 221, 221),
             BorderStyle = BorderStyle.None
         };
@@ -150,7 +159,7 @@ public sealed class MainForm : Form
         var sec3 = new Label
         {
             Location = new Point(16, 198),
-            Size = new Size(368, 18),
+            Size = new Size(418, 18),
             Font = new Font("Segoe UI", 10, FontStyle.Bold),
             ForeColor = Color.FromArgb(51, 51, 51),
             Text = "GitHub 活跃状态"
@@ -159,7 +168,7 @@ public sealed class MainForm : Form
         _githubLabel = new Label
         {
             Location = new Point(16, 218),
-            Size = new Size(368, 20),
+            Size = new Size(418, 20),
             Font = new Font("Segoe UI", 10),
             Text = "GitHub: not configured"
         };
@@ -167,14 +176,14 @@ public sealed class MainForm : Form
         _githubTimeLabel = new Label
         {
             Location = new Point(16, 240),
-            Size = new Size(368, 16),
+            Size = new Size(418, 16),
             Font = new Font("Segoe UI", 9),
             ForeColor = Color.Gray,
             Text = ""
         };
 
         Controls.AddRange(new Control[] {
-            refreshBtn, pushBtn, settingsBtn,
+            refreshBtn, pushBtn, settingsBtn, deleteBtn,
             sec1, _sourceLabel, _titleLabel, _artistLabel, sep1,
             sec2, _personaLabel, _steamLabel, sep2,
             sec3, _githubLabel, _githubTimeLabel
