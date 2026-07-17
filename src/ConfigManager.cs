@@ -40,12 +40,6 @@ public record Config
     [JsonPropertyName("steam_steam_id")]
     public string SteamSteamId { get; init; } = "";
 
-    [JsonPropertyName("github_username")]
-    public string GitHubUsername { get; init; } = "";
-
-    [JsonPropertyName("github_token")]
-    public string GitHubToken { get; init; } = "";
-
     [JsonPropertyName("api_push_url")]
     public string ApiPushUrl { get; init; } = "";
 }

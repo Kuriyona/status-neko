@@ -4,19 +4,15 @@ public sealed class SettingsForm : Form
 {
     private readonly TextBox _apiKeyBox;
     private readonly TextBox _steamIdBox;
-    private readonly TextBox _usernameBox;
-    private readonly TextBox _tokenBox;
     private readonly TextBox _apiUrlBox;
     private readonly SteamWatcher _steamWatcher;
-    private readonly GitHubWatcher _gitHubWatcher;
 
-    public SettingsForm(SteamWatcher steamWatcher, GitHubWatcher gitHubWatcher)
+    public SettingsForm(SteamWatcher steamWatcher)
     {
         _steamWatcher = steamWatcher;
-        _gitHubWatcher = gitHubWatcher;
 
         Text = "设置";
-        ClientSize = new Size(380, 310);
+        ClientSize = new Size(380, 240);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -32,14 +28,6 @@ public sealed class SettingsForm : Form
         y += gap + 8;
         AddLabel("Steam ID:", 16, y);
         _steamIdBox = AddTextBox(16, y += gap);
-
-        y += gap + 8;
-        AddLabel("GitHub 用户名:", 16, y);
-        _usernameBox = AddTextBox(16, y += gap);
-
-        y += gap + 8;
-        AddLabel("GitHub Token (可选):", 16, y);
-        _tokenBox = AddTextBox(16, y += gap);
 
         y += gap + 8;
         AddLabel("API 推送 URL (可选):", 16, y);
@@ -62,7 +50,7 @@ public sealed class SettingsForm : Form
         cancelBtn.Click += (_, _) => Close();
 
         Controls.AddRange(new Control[] {
-            _apiKeyBox, _steamIdBox, _usernameBox, _tokenBox, _apiUrlBox,
+            _apiKeyBox, _steamIdBox, _apiUrlBox,
             saveBtn, cancelBtn
         });
     }
@@ -86,12 +74,10 @@ public sealed class SettingsForm : Form
         };
     }
 
-    public void LoadCredentials(string apiKey, string steamId, string gitHubUser, string gitHubToken, string apiPushUrl)
+    public void LoadCredentials(string apiKey, string steamId, string apiPushUrl)
     {
         _apiKeyBox.Text = apiKey;
         _steamIdBox.Text = steamId;
-        _usernameBox.Text = gitHubUser;
-        _tokenBox.Text = gitHubToken;
         _apiUrlBox.Text = apiPushUrl;
     }
 
@@ -99,8 +85,6 @@ public sealed class SettingsForm : Form
     {
         var key = _apiKeyBox.Text.Trim();
         var sid = _steamIdBox.Text.Trim();
-        var ghUser = _usernameBox.Text.Trim();
-        var ghToken = _tokenBox.Text.Trim();
         var apiUrl = _apiUrlBox.Text.Trim();
 
         if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(sid))
@@ -109,16 +93,10 @@ public sealed class SettingsForm : Form
             _steamWatcher.Refresh();
         }
 
-        _gitHubWatcher.SetCredentials(ghUser, ghToken);
-        if (!string.IsNullOrEmpty(ghUser))
-            _gitHubWatcher.Refresh();
-
         ConfigManager.Save(new Config
         {
             SteamApiKey = key,
             SteamSteamId = sid,
-            GitHubUsername = ghUser,
-            GitHubToken = ghToken,
             ApiPushUrl = apiUrl
         });
 

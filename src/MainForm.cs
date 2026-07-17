@@ -8,7 +8,6 @@ public sealed class MainForm : Form
     private readonly NotifyIcon _trayIcon;
     private readonly SMTCMonitor _monitor = new();
     private readonly SteamWatcher _steamWatcher = new();
-    private readonly GitHubWatcher _gitHubWatcher = new();
     private readonly HttpClient _apiClient = new();
 
     private readonly Label _sourceLabel;
@@ -16,18 +15,15 @@ public sealed class MainForm : Form
     private readonly Label _artistLabel;
     private readonly Label _personaLabel;
     private readonly Label _steamLabel;
-    private readonly Label _githubLabel;
-    private readonly Label _githubTimeLabel;
 
     private MediaInfo? _currentMedia;
     private SteamInfo? _currentSteam;
-    private GitHubEventInfo? _currentGitHub;
     private string _apiPushUrl = "";
 
     public MainForm()
     {
         Text = "Status Neko";
-        ClientSize = new Size(450, 280);
+        ClientSize = new Size(450, 220);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -40,11 +36,7 @@ public sealed class MainForm : Form
             Location = new Point(218, 6),
             Size = new Size(50, 24)
         };
-        refreshBtn.Click += (_, _) =>
-        {
-            _steamWatcher.Refresh();
-            _gitHubWatcher.Refresh();
-        };
+        refreshBtn.Click += (_, _) => _steamWatcher.Refresh();
 
         var pushBtn = new Button
         {
@@ -154,39 +146,10 @@ public sealed class MainForm : Form
             BorderStyle = BorderStyle.None
         };
 
-        // ── Section 3: GitHub ──
-
-        var sec3 = new Label
-        {
-            Location = new Point(16, 198),
-            Size = new Size(418, 18),
-            Font = new Font("Segoe UI", 10, FontStyle.Bold),
-            ForeColor = Color.FromArgb(51, 51, 51),
-            Text = "GitHub 活跃状态"
-        };
-
-        _githubLabel = new Label
-        {
-            Location = new Point(16, 218),
-            Size = new Size(418, 20),
-            Font = new Font("Segoe UI", 10),
-            Text = "GitHub: not configured"
-        };
-
-        _githubTimeLabel = new Label
-        {
-            Location = new Point(16, 240),
-            Size = new Size(418, 16),
-            Font = new Font("Segoe UI", 9),
-            ForeColor = Color.Gray,
-            Text = ""
-        };
-
         Controls.AddRange(new Control[] {
             refreshBtn, pushBtn, settingsBtn, deleteBtn,
             sec1, _sourceLabel, _titleLabel, _artistLabel, sep1,
-            sec2, _personaLabel, _steamLabel, sep2,
-            sec3, _githubLabel, _githubTimeLabel
+            sec2, _personaLabel, _steamLabel, sep2
         });
 
         // ── Tray icon ──
@@ -202,11 +165,7 @@ public sealed class MainForm : Form
         contextMenu.Items.Add("显示窗口", null, (_, _) => ShowWindow());
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add("设置", null, (_, _) => OpenSettings());
-        contextMenu.Items.Add("刷新", null, (_, _) =>
-        {
-            _steamWatcher.Refresh();
-            _gitHubWatcher.Refresh();
-        });
+        contextMenu.Items.Add("刷新", null, (_, _) => _steamWatcher.Refresh());
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add("退出", null, (_, _) => Quit());
         _trayIcon.ContextMenuStrip = contextMenu;
@@ -238,18 +197,8 @@ public sealed class MainForm : Form
             BeginInvoke(() => OnSteamError());
         };
 
-        _gitHubWatcher.OnUpdate += info =>
-        {
-            BeginInvoke(() => OnGitHubUpdate(info));
-        };
-        _gitHubWatcher.OnError += () =>
-        {
-            BeginInvoke(() => OnGitHubError());
-        };
-
         LoadConfig();
         _steamWatcher.Start();
-        _gitHubWatcher.Start();
         Load += (_, _) => _ = _monitor.StartAsync();
     }
 
@@ -263,12 +212,6 @@ public sealed class MainForm : Form
             _steamWatcher.SetCredentials(cfg.SteamApiKey, cfg.SteamSteamId);
             _steamWatcher.Refresh();
             _personaLabel.Text = "Steam: loading...";
-        }
-        if (!string.IsNullOrEmpty(cfg.GitHubUsername))
-        {
-            _gitHubWatcher.SetCredentials(cfg.GitHubUsername, cfg.GitHubToken);
-            _gitHubWatcher.Refresh();
-            _githubLabel.Text = "GitHub: loading...";
         }
     }
 
@@ -317,47 +260,6 @@ public sealed class MainForm : Form
         _ = TryPushToApiAsync();
     }
 
-    private void OnGitHubUpdate(GitHubEventInfo info)
-    {
-        _currentGitHub = info;
-
-        if (!string.IsNullOrEmpty(info.Repo) && !string.IsNullOrEmpty(info.Message))
-        {
-            if (info.Message == "pushed")
-            {
-                _githubLabel.Text = $"Push to {info.Repo}";
-            }
-            else
-            {
-                var shortMessage = info.Message.Length > 48
-                    ? info.Message[..45] + "..."
-                    : info.Message;
-                _githubLabel.Text = $"{info.Repo}: {shortMessage}";
-            }
-
-            _githubTimeLabel.Text = info.Timestamp != DateTime.MinValue
-                ? $"{info.Timestamp.ToLocalTime():yyyy-MM-dd HH:mm:ss}"
-                : "";
-        }
-        else
-        {
-            _githubLabel.Text = "GitHub: no recent commits";
-            _githubTimeLabel.Text = "";
-        }
-
-        UpdateTooltip();
-        _ = TryPushToApiAsync();
-    }
-
-    private void OnGitHubError()
-    {
-        _currentGitHub = null;
-        _githubLabel.Text = "GitHub: error";
-        _githubTimeLabel.Text = "";
-        UpdateTooltip();
-        _ = TryPushToApiAsync();
-    }
-
     private void UpdateTooltip()
     {
         var lines = new List<string> { "Status Neko" };
@@ -381,11 +283,6 @@ public sealed class MainForm : Form
                 lines.Add($"{_currentSteam.PersonaName}  —  {PersonaStateText(_currentSteam.PersonaState)}");
             if (_currentSteam.Game.Length > 0)
                 lines.Add(_currentSteam.Game);
-        }
-
-        if (_currentGitHub is { Repo.Length: > 0, Message.Length: > 0 })
-        {
-            lines.Add($"{_currentGitHub.Repo}: {_currentGitHub.Message}");
         }
 
         var text = string.Join("\n", lines);
@@ -414,12 +311,6 @@ public sealed class MainForm : Form
                     persona_name = _currentSteam.PersonaName,
                     state = _currentSteam.PersonaState,
                     game = _currentSteam.Game
-                } : null,
-                ["github"] = _currentGitHub is { Repo.Length: > 0, Message.Length: > 0 } ? new
-                {
-                    repo = _currentGitHub.Repo,
-                    message = _currentGitHub.Message,
-                    timestamp = _currentGitHub.Timestamp
                 } : null
             };
 
@@ -474,8 +365,8 @@ public sealed class MainForm : Form
     private void OpenSettings()
     {
         var cfg = ConfigManager.Load();
-        using var form = new SettingsForm(_steamWatcher, _gitHubWatcher);
-        form.LoadCredentials(cfg.SteamApiKey, cfg.SteamSteamId, cfg.GitHubUsername, cfg.GitHubToken, cfg.ApiPushUrl);
+        using var form = new SettingsForm(_steamWatcher);
+        form.LoadCredentials(cfg.SteamApiKey, cfg.SteamSteamId, cfg.ApiPushUrl);
         form.ShowDialog(this);
         _apiPushUrl = ConfigManager.Load().ApiPushUrl;
     }
@@ -484,7 +375,6 @@ public sealed class MainForm : Form
     {
         _monitor.Stop();
         _steamWatcher.Stop();
-        _gitHubWatcher.Stop();
         _trayIcon.Visible = false;
         _trayIcon.Dispose();
         Application.Exit();
@@ -511,8 +401,6 @@ public sealed class MainForm : Form
             _monitor.Stop();
             _steamWatcher.Stop();
             _steamWatcher.Dispose();
-            _gitHubWatcher.Stop();
-            _gitHubWatcher.Dispose();
             _trayIcon.Dispose();
             _apiClient.Dispose();
         }

@@ -15,8 +15,3 @@ public record SteamInfo(
     string RealName
 );
 
-public record GitHubEventInfo(
-    string Repo,
-    string Message,
-    DateTime Timestamp
-);
